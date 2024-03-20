@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+// #include <string.h>
 
 //cria uma lista de adjacencia para armazenar os emails
 typedef struct Node{
-    char email[50];
+    char letra;
     struct Node *proximo;
 } Node;
 
@@ -23,54 +22,69 @@ Lista *criarLista(){
     return lista;
 }
 
-//adiciona um email na lista
-void adicionarEmail(Lista *lista, char email[]){
-    Node *novo = (Node *)malloc(sizeof(Node));
-    strcpy(novo->email, email);
-    novo->proximo = NULL;
-    if(lista->inicio == NULL){
-        lista->inicio = novo;
+//inserir item ao final da lista
+void inserirItemNaLista (Lista *lista, char letra){
+    Node *novo = (Node *)malloc(sizeof(Node)); //cria um novo espaço para o email
+    novo->letra = letra; //o novo espaço recebe o email
+    novo->proximo = NULL; 
+
+    if(lista->inicio == NULL){ //se a lista estiver vazia
+        lista->inicio = novo;//a lista recebe o novo espaço
         lista->fim = novo;
-    }else{
+    }else{ //se a lista não estiver vazia
         lista->fim->proximo = novo;
         lista->fim = novo;
+        lista->fim->proximo = NULL;
     }
+    
+    return;
 }
 
-//imprima a lista
-void imprimirLista(Lista *lista){
-    Node *atual = lista->inicio;
-    while(atual != NULL){
-        printf("%s\n", atual->email);
-        atual = atual->proximo;
-    }
-}
-
-
-int main(){
-    //abra um arquivo csv
+void ler_arquivo(Lista **listaAdjacencia){
+    int i = 0;
+    listaAdjacencia[i] = criarLista();
     FILE *file = fopen("emails.csv", "r");
     if(file == NULL){
         printf("Erro ao abrir o arquivo\n");
-        return 1;
+        return;
     }
 
-    //cria a lista de emails
-    Lista *lista = criarLista();
+    char caracter;
+    caracter = fgetc(file); //recebe o arquivo
 
-    //leia o arquivo
-    char linha[100];
-    while(fgets(linha, 100, file)){
-        char *email = strtok(linha, ",");
-        adicionarEmail(lista, email);
+    while (caracter != EOF) { 
+        if (caracter == '\n'){
+            i++;
+            listaAdjacencia[i] = criarLista();
+        }
+        inserirItemNaLista(listaAdjacencia[i], caracter);
+        caracter = fgetc(file);
     }
 
-    //imprima a lista
-    imprimirLista(lista);
-
-    //feche o arquivo
     fclose(file);
 
-    return 0;
+    return;
 }
 
+//faca um print da lista 
+void imprimirLista(Lista *lista){
+    Node *aux = lista->inicio;
+    while(aux != NULL){
+        printf("%c -> ", aux->letra);
+        aux = aux->proximo;
+    }
+    printf("\n");
+    return;
+}
+
+int main(){
+    Lista **listaAdjacencia = (Lista **)malloc(4 * sizeof(Lista *));
+
+    ler_arquivo(listaAdjacencia);
+
+    for (int i=0; i<4; i++){
+        imprimirLista(listaAdjacencia[i]);
+    }
+    
+    return 0;
+}
